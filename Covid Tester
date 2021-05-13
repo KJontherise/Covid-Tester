@@ -1,0 +1,251 @@
+# Covid-Tester
+# Name: KJ Whitfield, Alan Flake
+
+from tkinter import*
+from tkinter import messagebox
+from time import sleep
+import time
+import os
+import subprocess, sys
+import board
+import adafruit_mlx90614
+import time
+
+i2c=board.I2C()
+mlx=adafruit_mlx90614.MLX90614(i2c)
+
+#window bases
+
+SIZEX=800
+SIZEY=450
+window=Tk()
+window.title("Covid Tester")
+window.geometry(f"{SIZEX}x{SIZEY}")
+window.configure(bg="turquoise")
+count=0
+ages=[]
+heights=[]
+weights=[]
+temps=[]
+for x in range(0,100):
+    ages.append(str(x))
+for y in range(20,90):
+    heights.append(str(y))
+for z in range(10,500):
+    weights.append(str(z))
+for w in range(88,110):
+    temps.append(str(w))
+def main():
+        
+        ###                     Window 1: User Input                    ###
+
+        #Window 1: Info Title
+        UserInput=Label(window,text="Input Information",font=30).place(x=50)
+
+        ## Window 1: User Information & Questions ##
+
+        #Window 1: Name
+        name=Label(window,text="1a. Name",font=18).place(y=50)
+        inputname = Entry(window)
+        inputname.place(x=125,y=50)
+        
+        #Window 1: Age
+        age=Label(window,text="2a. Age",font=18).place(y=100)
+        inputage=Entry(window)
+        inputage.place(x=125,y=100)
+
+        #Window 1: Height
+        height=Label(window,text="3a. Height (ins)",font=18).place(y=150)
+        inputheight=Entry(window)
+        inputheight.place(x=125,y=150)
+
+        #Window 1: Weight
+        weight=Label(window,text="4a. Weight (lbs)",font=18).place(y=200)
+        inputweight=Entry(window)
+        inputweight.place(x=125,y=200)
+
+        #Window 1: Temperature
+        Temperature=Label(window,text="Place wrist on thermometer\npress when ready!",font=18).place(x=250,y=350)
+
+        #Button for temperature
+        def submit():
+                time.sleep(1)
+                temp=str(int(mlx.object_temperature*(9/5))+32)
+                if temp in temps:
+                        
+                        return Label(window,text="Temerature Checked...").place(x=280,y=430),temp
+                else:
+                        messagebox.showerror("Error","Please rescan Temperature")
+                        
+                
+                
+        tempb=Button(window,text="Check",command=submit).place(x=325,y=400)
+
+        ## Window 1: Store Information ##
+        
+        #check to make sure answer is valid
+        def check():
+                global count
+                if len(inputname.get())>1 :
+                        pass
+                else:
+                        messagebox.showerror("Error","Please enter Valid Name")
+                        
+                if inputage.get() in ages:
+                        pass
+                else:
+                        messagebox.showerror("Error","Please enter Valid Age")
+
+
+                if inputheight.get() in heights:
+                        pass
+                else:
+                        messagebox.showerror("Error","Please Enter Valid Height")
+                        
+                if inputweight.get() in weights:
+                        pass
+                else:
+                        messagebox.showerror("Error","Please Enter Valid Weight")
+
+                
+                                
+
+                if(inputage.get() in ages or inputheight.get() in heights or inputweight.get() in weights):
+                        #add count for age
+                        if int(inputweight.get())>51:
+                                count+=1
+
+
+        ###             Window 1: Questions             ##
+
+        #Window 1: Question Title
+        Questions=Label(window,text="IN THE PAST 2 WEEKS HAVE YOU:",font=30).place(x=300)
+
+        #Window 1: Questions
+
+        #Question 1
+        Label(window, text="q1. Any shortness of breath or coughing? ", font=(15)).place(x=300,y=50)
+        q1=StringVar()
+        q1.set("Choose")
+        choice1=OptionMenu(window,q1,"Y","N")
+        choice1.place(x=700,y=45)
+
+        #Question 2
+        Label(window, text="q2. Been tested for COVID?", font=(18)).place(x=300,y=100)
+        q2=StringVar()
+        q2.set("Choose")
+        choice2=OptionMenu(window,q2,"Y","N")
+        choice2.place(x=700,y=95)
+
+        #Question 3
+        Label(window, text="q3. Lost your sense of taste/smell?", font=(18)).place(x=300,y=150)
+        q3=StringVar()
+        q3.set("Choose")
+        choice3=OptionMenu(window,q3,"Y","N")
+        choice3.place(x=700,y=145)
+
+        #Question 4
+        Label(window, text="q4. Been exposed to someone with COVID?", font=(18)).place(x=300,y=200)
+        q4=StringVar()
+        q4.set("Choose")
+        choice4=OptionMenu(window,q4,"Y","N")
+        choice4.place(x=700,y=195)
+
+        #Question 5
+        Label(window, text="q5. Had any fevers?", font=18).place(x=300,y=250)
+        q5=StringVar()
+        q5.set("Choose")
+        choice5=OptionMenu(window,q5,"Y","N")
+        choice5.place(x=700,y=245)
+
+        #Check if questions are answered
+        def checkAns():
+                global count
+                if (q1.get() =="Y" ):    
+                        count+=2
+                if(q2.get() =="N" ):
+                        count+=1
+                if(q3.get() =="Y" ):
+                        count+=3
+                if(q4.get() =="Y"):
+                        count+=3
+                if(q5.get() =="Y" ):
+                        count+=2
+                if(q1.get()=="Choose" or q2.get()=="Choose" or q3.get()=="Choose" or q4.get()=="Choose" or q5.get()=="Choose"):
+                                pass
+                else:
+                        print(count)
+
+        
+
+#Window 1: Submit to next window 2
+
+###                     Window 2: Results                       ##
+
+        def newWindow():
+                results=Toplevel(window)
+                results.title("Results")
+                results.geometry(f"800x450")
+                results.configure(bg="turquoise")
+
+                #Window 2: Title
+                Label(results,text="Test Results",font=50).place(x=125)
+                #Windows 2: BMI
+                bmi=int((int(inputweight.get()) / (int(inputheight.get())**2))*703)
+                def BMI():
+                        global count
+                        if (bmi < 20 or bmi>28):
+                                #add to covid counter if your bmi is under or above normal
+                                count+=1
+                                return "an unhealthy BMI"
+                        else:
+                                return "a healthy BMI"
+                def ageRisk():
+                        global count
+                        if (int(inputage.get()) > 51):
+                        #add 2 to covid counter due to high risk
+                                count +=2
+                                return "high"
+                        elif (int(inputage.get())  > 31):
+                                #add 1 to counter due to moderate risk
+                                count+=1
+                                return "moderate"
+                        else:
+                                return "low"
+                
+                def Covid():
+                        if (count > 13):
+                                return ("should get tested for covid.")
+                        elif (count > 8):
+                                return ("may be a little unhealthy")
+                        else:
+                                return ("seem healthy")
+
+                ##Window 2: Labels
+                Label(results,text=f"Name: {inputname.get()}",font=30) .place(x=0,y=30)
+                Label(results,text=f"Age: {inputage.get()}",font=30) .place(x=0,y=90)
+                Label(results,text=f"BMI: {bmi}",font=30) .place(x=0,y=150)
+                Label(results,text=f"Temp: {submit()}",font=30) .place(x=0,y=210)
+                Label(results,text=f"Covid Risk: {count}/18",font=30) .place(x=0,y=270)
+                Label(results,text="You {} .\nDue to your age, you have {} health risk ".format(Covid(),ageRisk()),font=30) .place(x=0,y=330)
+
+                ##reset
+                #reset=Button(window,text="Restart",command=restart,bg="red").place(x=0,y=420)
+
+        def nextPage():
+                check()
+                checkAns()
+                if(q1.get()=="Choose" or q2.get()=="Choose" or q3.get()=="Choose" or q4.get()=="Choose" or q5.get()=="Choose"):
+                        messagebox.showerror("Error","Please Answer Everything")
+                else:
+                        return Label(window,text="No Errors...you may continue").place(x=525,y=350),Button(window,text="Next Page",command=newWindow).place(x=700,y=420)
+        Button(window,text="Done",command=nextPage).place(x=736,y=420)
+main()
+
+#reset button 
+##def restart():
+##        window.destroy()
+##        os.startfile("FinalProjectiPad.pyw")
+##reset=Button(window,text="Restart",command=restart,bg="red").place(x=0,y=420)
+
+window.mainloop()
